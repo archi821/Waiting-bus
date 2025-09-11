@@ -29,6 +29,12 @@ export default function SkytrainPage() {
         <h2>🚈 Canada Line</h2>
         <p>連接 Waterfront 至 Richmond–Brighouse 與 YVR Airport，是通往機場與南溫哥華的主要路線。</p>
       </section>
+
+      <section style={{ marginBottom: 24 }}>
+        <h2>🚈 West Coast Express</h2>
+        <p>西海岸快線 (WCE) 在工作日早晚高峰時段往返於Waterfront和Mission之間。</p>
+      </section>
+
     </div>
   );
 }
