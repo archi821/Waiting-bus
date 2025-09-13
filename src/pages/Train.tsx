@@ -24,8 +24,7 @@ export default function Train() {
     { trip_id: string; departure_time: string; arrival_time: string }[]
   >([]);
   const [history, setHistory] = useState<string[]>([]);
-  const [hasSearched, setHasSearched] = useState(false);
-
+ 
   useEffect(() => {
     Promise.all([
       fetch('/viatrain_gtfs/stops.txt').then(res => res.text()),
@@ -79,7 +78,7 @@ export default function Train() {
       .filter(Boolean) as { trip_id: string; departure_time: string; arrival_time: string }[];
 
     setResults(filtered);
-    setHasSearched(true);
+    
 
     const record = `${departure} → ${arrival}（${filtered.length} 筆結果）`;
     setHistory(prev => [record, ...prev]);
@@ -135,17 +134,15 @@ export default function Train() {
           backgroundColor: '#eee',
           borderRadius: '50%',
           position: 'absolute',
-          right: '205px',
+          right: '190px',
           width: '27px',
           height: '27px',
-          top: '38%',
+          top: '35%',
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
           boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
           cursor: 'pointer',
-          marginTop: '-16px',
-          marginBottom: '1rem',
         }}
       >
         🔃
@@ -223,24 +220,7 @@ export default function Train() {
       >
         查詢時刻
       </button>
-
-      {/* 查詢結果（查詢後才顯示） */}
-      {hasSearched && (
-        <div style={{ width: '60%', marginTop: '2rem' }}>
-          <h3>查詢結果</h3>
-          {results.length === 0 ? (
-            <p>無符合班次</p>
-          ) : (
-            <ul>
-              {results.map((r, i) => (
-                <li key={i}>
-                  車次 {r.trip_id}：{r.departure_time} → {r.arrival_time}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
+ 
     </main>
 
     {/* 左下：歷史紀錄（永遠顯示） */}
