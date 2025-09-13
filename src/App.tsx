@@ -73,6 +73,7 @@ export default function App() {
         <Route path="/nearby" element={<PlaceholderPage title="附近站牌" />} />
         <Route path="/planner" element={<PlaceholderPage title="路線規劃" />} />
         <Route path="/favorites"element={<FavoritesPage />} />
+        <Route path="/stop/:stopId" element={<StopDetail />} />
       </Routes>
     </BrowserRouter>
   );
