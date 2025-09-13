@@ -6,6 +6,8 @@ import {
 } from 'react-icons/fa';
 
 import SearchPage from './pages/Search';
+import FavoritesPage from './pages/Favorites';
+import StopDetail from './pages/StopDetail';
 import BikePage from './pages/Bike';
 import SkytrainPage from './pages/Skytrain';
 import TrainPage from './pages/Train';
@@ -23,6 +25,7 @@ function PlaceholderPage({ title }: { title: string }) {
 
 export default function App() {
   return (
+
     <BrowserRouter>
       <Routes>
         <Route
@@ -69,7 +72,7 @@ export default function App() {
         <Route path="/search" element={<SearchPage />} />
         <Route path="/nearby" element={<PlaceholderPage title="附近站牌" />} />
         <Route path="/planner" element={<PlaceholderPage title="路線規劃" />} />
-        <Route path="/favorites" element={<PlaceholderPage title="常用站牌" />} />
+        <Route path="/favorites"element={<FavoritesPage />} />
       </Routes>
     </BrowserRouter>
   );
