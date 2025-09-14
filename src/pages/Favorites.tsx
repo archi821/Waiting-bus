@@ -1,45 +1,61 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+// @ts-ignore
+import stopsRaw from '../data/stops.json';
+
+type Stop = {
+  stop_code: string;
+  stop_name: string;
+  stop_lat: string;
+  stop_lon: string;
+};
+
+const stops: Stop[] = Array.isArray(stopsRaw)
+  ? stopsRaw.map((s: any) => ({
+      stop_code: String(s.stop_code).trim(),
+      stop_name: String(s.stop_name || '').trim(),
+      stop_lat: String(s.stop_lat || '').trim(),
+      stop_lon: String(s.stop_lon || '').trim(),
+    }))
+  : [];
 
 export default function Favorites(): JSX.Element {
-  const [inputId, setInputId] = useState<string>('');
-  const [favorites, setFavorites] = useState<string[]>([]);
-  const [selectedStopName, setSelectedStopName] = useState<string | null>(null);
+  const [inputCode, setInputCode] = useState<string>('');
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    const saved = localStorage.getItem('favorites');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const navigate = useNavigate();
 
-  const mockStopLookup = (stopId: string): string | null => {
-    const mockData: Record<string, string> = {
-      '52284': 'Southbound Cariboo Rd @ 16 Ave',
-      '52262': 'Cariboo Rd at 7600 Block',
-      '58438': 'Lougheed Stn at Bay 4',
-    };
-    return mockData[stopId] || null;
-  };
+  const findStopByCode = (code: string): Stop | undefined =>
+    stops.find((s) => s.stop_code === code.trim());
 
-  const handleLookup = () => {
-    const name = mockStopLookup(inputId.trim());
-    setSelectedStopName(name);
-  };
+  const selectedStop = inputCode.trim() ? findStopByCode(inputCode) : undefined;
 
   const handleAddFavorite = () => {
-    if (inputId && !favorites.includes(inputId)) {
-      setFavorites([...favorites, inputId]);
+    if (inputCode && !favorites.includes(inputCode)) {
+      const updated = [...favorites, inputCode];
+      setFavorites(updated);
+      localStorage.setItem('favorites', JSON.stringify(updated));
     }
   };
 
-  const handleRemoveFavorite = (id: string) => {
-    setFavorites(favorites.filter((stopId) => stopId !== id));
+  const handleRemoveFavorite = (code: string) => {
+    const updated = favorites.filter((c) => c !== code);
+    setFavorites(updated);
+    localStorage.setItem('favorites', JSON.stringify(updated));
   };
 
-  const renderStopCard = (stopId: string) => {
-    const name = mockStopLookup(stopId);
+  const renderStopCard = (code: string) => {
+    const stop = findStopByCode(code);
     return (
-      <div key={stopId} style={styles.card}>
-        <div onClick={() => navigate(`/stop/${stopId}`)} style={{ cursor: 'pointer' }}>
-          <div style={styles.stopName}>{name || '未知站牌'}</div>
-          <div style={styles.stopId}>Stop #{stopId}</div>
+      <div key={code} style={styles.card}>
+        <div onClick={() => navigate(`/stop/${code}`)} style={{ cursor: 'pointer' }}>
+          <div style={styles.stopName}>{stop?.stop_name || '未知站牌'}</div>
+          <div style={styles.stopId}>代碼 #{code}</div>
         </div>
-        <button style={styles.removeBtn} onClick={() => handleRemoveFavorite(stopId)}>
+        <button style={styles.removeBtn} onClick={() => handleRemoveFavorite(code)}>
           🗑️
         </button>
       </div>
@@ -53,21 +69,21 @@ export default function Favorites(): JSX.Element {
       <div style={styles.inputRow}>
         <input
           style={styles.input}
-          placeholder="輸入站牌號碼"
-          value={inputId}
-          onChange={(e) => setInputId(e.target.value)}
+          placeholder="輸入站牌代碼"
+          value={inputCode}
+          onChange={(e) => setInputCode(e.target.value)}
         />
-        <button style={styles.lookupBtn} onClick={handleLookup}>
+        <button style={styles.lookupBtn} onClick={() => {}}>
           查詢
         </button>
       </div>
 
-      {selectedStopName && (
+      {selectedStop && (
         <div style={styles.resultBox}>
-          <div style={styles.resultName}>{selectedStopName}</div>
-          <div style={styles.resultId}>Stop #{inputId}</div>
-          {favorites.includes(inputId) ? (
-            <button style={styles.removeBtn} onClick={() => handleRemoveFavorite(inputId)}>
+          <div style={styles.resultName}>{selectedStop.stop_name}</div>
+          <div style={styles.resultId}>代碼 #{selectedStop.stop_code}</div>
+          {favorites.includes(selectedStop.stop_code) ? (
+            <button style={styles.removeBtn} onClick={() => handleRemoveFavorite(selectedStop.stop_code)}>
               🗑️ 移除
             </button>
           ) : (
