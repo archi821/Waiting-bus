@@ -7,7 +7,7 @@ import {
 
 import SearchPage from './pages/Search';
 import FavoritesPage from './pages/Favorites';
-import StopDetail from './pages/StopDetail';
+import StopDetail from './pages/StopDetail.jsx';
 import BikePage from './pages/Bike';
 import SkytrainPage from './pages/Skytrain';
 import TrainPage from './pages/Train';
