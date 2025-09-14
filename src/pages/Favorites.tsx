@@ -56,7 +56,7 @@ export default function Favorites(): JSX.Element {
           <div style={styles.stopId}>代碼 #{code}</div>
         </div>
         <button style={styles.removeBtn} onClick={() => handleRemoveFavorite(code)}>
-          🗑
+          🗑️
         </button>
       </div>
     );
@@ -84,7 +84,7 @@ export default function Favorites(): JSX.Element {
           <div style={styles.resultId}>代碼 #{selectedStop.stop_code}</div>
           {favorites.includes(selectedStop.stop_code) ? (
             <button style={styles.removeBtn} onClick={() => handleRemoveFavorite(selectedStop.stop_code)}>
-              🗑 移除
+              🗑️ 移除
             </button>
           ) : (
             <button style={styles.favoriteBtn} onClick={handleAddFavorite}>
@@ -159,4 +159,3 @@ const styles: Record<string, React.CSSProperties> = {
   stopId: { fontSize: 12, color: '#666' },
   empty: { textAlign: 'center', marginTop: 20, color: '#999' },
 };
-
