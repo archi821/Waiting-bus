@@ -8,7 +8,8 @@ import {
 import SearchPage from './pages/Search';
 import FavoritesPage from './pages/Favorites';
 import StopDetail from './pages/StopDetail';
-import NearbyPage from './pages/Nearby'; 
+import NearbyPage from './pages/Nearby';
+import PlannerPage from './pages/planner';
 import BikePage from './pages/Bike';
 import SkytrainPage from './pages/Skytrain';
 import TrainPage from './pages/Train';
@@ -72,7 +73,7 @@ export default function App() {
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/nearby" element={<NearbyPage />} />
-        <Route path="/planner" element={<PlaceholderPage title="路線規劃" />} />
+        <Route path="/planner" element={<PlannerPage />} />
         <Route path="/favorites"element={<FavoritesPage />} />
         <Route path="/stop/:stopId" element={<StopDetail />} />
       </Routes>
