@@ -43,7 +43,7 @@ export default function App() {
                 <IconLabel icon={<FaSubway />} label="天車" to="/skytrain" />
                 <IconLabel icon={<FaTrain />} label="火車" to="/train" />
                 <IconLabel icon={<FaShip />} label="Seabus" to="/seabus" />
-                <IconLabel icon={<FaBus />} label="機場客運" to="/bus" />
+                <IconLabel icon={<FaBus />} label="機場客運" to="/shuttles" />
                 <IconLabel icon={<FaCog />} label="設定" to="/settings" />
               </View>
 
@@ -69,7 +69,7 @@ export default function App() {
         <Route path="/skytrain" element={<SkytrainPage />} />
         <Route path="/train" element={<TrainPage />} />
         <Route path="/seabus" element={<SeabusPage />} />
-        <Route path="/bus" element={<ShuttlesPage />} />
+        <Route path="/shuttles" element={<ShuttlesPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/nearby" element={<NearbyPage />} />
