@@ -50,7 +50,7 @@ export default function App() {
               {/* 警示跑馬燈 */}
               <div style={webStyles.alertContainer}>
                 <div style={webStyles.alertText} className="marquee">
-                  🚨 秋季服務變更。我們將增加 99 號公車班次，縮短工作日以及週日和假日早上的候車時間。
+                  🚨 世博線軌道維護將於9月17日晚上9:30開始，直至服務結束。 Royal Oak Stations和Edmonds Stations之間列車將單軌運行。 2號月台將關閉。請從車站的1號月台上車。 千禧線和加拿大線不受影響。
                 </div>
               </div>
 
