@@ -81,7 +81,7 @@ export const ferryDocks: FerryMarkerProps[] = [
     lat: 49.2725,
     lng: -123.1340,
     type: 'aquabus',
-    busRoutes: ['250', '257', '262'],
+    busRoutes: ['23', '50'],
     link: 'https://theaquabus.com/',
   },
   {
