@@ -27,6 +27,7 @@ export const ferryDocks: FerryMarkerProps[] = [
     lat: 49.2871,
     lng: -123.1089,
     type: 'seabus',
+    busRoutes: ['2', '3', '4', '7', '8', '10', '44', '50', 'N8', 'R5'],
     link: 'https://www.translink.ca/schedules-and-maps/seabus',
   },
   {
@@ -34,6 +35,7 @@ export const ferryDocks: FerryMarkerProps[] = [
     lat: 49.3102,
     lng: -123.0814,
     type: 'seabus',
+    busRoutes: ['228', '229', '230', '231', '236', '249', 'R2'],
     link: 'https://www.translink.ca/schedules-and-maps/seabus',
   },
 
@@ -43,6 +45,7 @@ export const ferryDocks: FerryMarkerProps[] = [
     lat: 49.1995,
     lng: -122.9116,
     type: 'qtoq',
+    busRoutes: ['103'],
     link: 'https://www.newwestcity.ca/qtoqferry/articles/7243.php',
   },
   {
@@ -50,6 +53,7 @@ export const ferryDocks: FerryMarkerProps[] = [
     lat: 49.1937,
     lng: -122.9230,
     type: 'qtoq',
+    busRoutes: ['104'],
     link: 'https://www.newwestcity.ca/qtoqferry/articles/7243.php',
   },
 
@@ -59,6 +63,7 @@ export const ferryDocks: FerryMarkerProps[] = [
     lat: 49.0164,
     lng: -123.1156,
     type: 'bcferry',
+    busRoutes: ['620'],
     link: 'https://www.bcferries.com/current-conditions/departures',
   },
   {
@@ -66,6 +71,7 @@ export const ferryDocks: FerryMarkerProps[] = [
     lat: 49.3750,
     lng: -123.2713,
     type: 'bcferry',
+    busRoutes: ['250', '257', '262'],
     link: 'https://www.bcferries.com/current-conditions/departures',
   },
 
@@ -75,6 +81,7 @@ export const ferryDocks: FerryMarkerProps[] = [
     lat: 49.2725,
     lng: -123.1340,
     type: 'aquabus',
+    busRoutes: ['250', '257', '262'],
     link: 'https://theaquabus.com/',
   },
   {
@@ -82,6 +89,7 @@ export const ferryDocks: FerryMarkerProps[] = [
     lat: 49.2734,
     lng: -123.1034,
     type: 'aquabus',
+    busRoutes: ['3', '8', '19', '22', 'N8', 'N19'],
     link: 'https://theaquabus.com/',
   },
   {
@@ -89,6 +97,7 @@ export const ferryDocks: FerryMarkerProps[] = [
     lat: 49.2716,
     lng: -123.1189,
     type: 'aquabus',
+    busRoutes: ['23'],
     link: 'https://theaquabus.com/',
   },
   {
@@ -96,6 +105,7 @@ export const ferryDocks: FerryMarkerProps[] = [
     lat: 49.2745,
     lng: -123.1345,
     type: 'aquabus',
+    busRoutes: ['23'],
     link: 'https://theaquabus.com/',
   },
   {
@@ -103,6 +113,7 @@ export const ferryDocks: FerryMarkerProps[] = [
     lat: 49.2707,
     lng: -123.1259,
     type: 'aquabus',
+    busRoutes: ['23'],
     link: 'https://theaquabus.com/',
   },
   {
@@ -110,6 +121,7 @@ export const ferryDocks: FerryMarkerProps[] = [
     lat: 49.2694,
     lng: -123.1192,
     type: 'aquabus',
+    busRoutes: ['15', '50', '84'],
     link: 'https://theaquabus.com/',
   },
   {
@@ -117,6 +129,7 @@ export const ferryDocks: FerryMarkerProps[] = [
     lat: 49.2710,
     lng: -123.1153,
     type: 'aquabus',
+    busRoutes: ['15', '50', '84'],
     link: 'https://theaquabus.com/',
   },
   {
@@ -124,6 +137,7 @@ export const ferryDocks: FerryMarkerProps[] = [
     lat: 49.2743,
     lng: -123.1100,
     type: 'aquabus',
+    busRoutes: ['23'],
     link: 'https://theaquabus.com/',
   },
   {
@@ -131,6 +145,7 @@ export const ferryDocks: FerryMarkerProps[] = [
     lat: 49.2725,
     lng: -123.1058,
     type: 'aquabus',
+    busRoutes: ['84'],
     link: 'https://theaquabus.com/',
   },
   {
@@ -138,6 +153,7 @@ export const ferryDocks: FerryMarkerProps[] = [
     lat: 49.2768,
     lng: -123.1365,
     type: 'aquabus',
+    busRoutes: ['23'],
     link: 'https://granvilleislandferries.bc.ca/',
   },
  {
@@ -145,6 +161,7 @@ export const ferryDocks: FerryMarkerProps[] = [
     lat: 49.2785,
     lng: -123.1470,
     type: 'aquabus',
+    busRoutes: ['2', 'N22'],
     link: 'https://granvilleislandferries.bc.ca/',
   },
 ];
