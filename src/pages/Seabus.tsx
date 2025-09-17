@@ -1,12 +1,20 @@
 import React from 'react';
+import { MapContainer, TileLayer } from 'react-leaflet';
+import FerryMarker from '../components/FerryMarker';
+import { ferryDocks } from '../components/ferryData';
 
-const SeabusPage: React.FC = () => {
+const SeabusMap = () => {
   return (
-    <div style={{ padding: 24 }}>
-      <h1>⛴️ Seabus</h1>
-      <p>此頁尚未建立，敬請期待。</p>
-    </div>
+    <MapContainer center={[49.2827, -123.1207]} zoom={12} style={{ height: '100vh', width: '100%' }}>
+      <TileLayer
+        attribution='&copy; OpenStreetMap contributors'
+        url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+      />
+      {ferryDocks.map((dock, idx) => (
+        <FerryMarker key={idx} {...dock} />
+      ))}
+    </MapContainer>
   );
 };
 
-export default SeabusPage;
+export default SeabusMap;
