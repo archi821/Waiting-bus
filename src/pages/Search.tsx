@@ -1,16 +1,19 @@
 import { useState, useRef, useEffect } from 'react';
 import { View, TextInput, Pressable, StyleSheet, ScrollView, Text } from 'react-native-web';
-import { FaSearch, FaKeyboard } from 'react-icons/fa';
+import { FaSearch, FaKeyboard, FaBook } from 'react-icons/fa';
 import RouteCard from '../components/RouteCard';
 import Keyboard from '../components/Keyboard';
+import FavoritesRoutes from './FavoritesRoutes';
+import useFavorites from '../hooks/useFavorites';
 
 export default function SearchPage() {
   const [query, setQuery] = useState('');
   const [routes, setRoutes] = useState<{ id: string; name: string }[]>([]);
   const [results, setResults] = useState<{ id: string; name: string }[]>([]);
-  const [favorites, setFavorites] = useState<string[]>([]);
   const [showKeyboard, setShowKeyboard] = useState(true);
+  const [showFavoritesModal, setShowFavoritesModal] = useState(false);
   const inputRef = useRef<any>(null);
+  const { favorites, toggleFavorite } = useFavorites();
 
   useEffect(() => {
     fetch('/google_transit/routes.txt')
@@ -62,15 +65,9 @@ export default function SearchPage() {
     searchRoutes(next);
   };
 
-  const toggleFavorite = (id: string) => {
-    setFavorites(prev =>
-      prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
-    );
-  };
-
   const toggleKeyboard = () => {
-    setShowKeyboard(true); // 強制展開
-    inputRef.current?.blur(); // 取消輸入框焦點，避免自動收回
+    setShowKeyboard(true);
+    inputRef.current?.blur();
   };
 
   return (
@@ -87,7 +84,7 @@ export default function SearchPage() {
             placeholder="輸入路線編號"
             placeholderTextColor="#ccc"
             onFocus={() => {
-              if (showKeyboard) setShowKeyboard(false); // 只在鍵盤展開時收回
+              if (showKeyboard) setShowKeyboard(false);
             }}
           />
           {query.length > 0 && (
@@ -95,6 +92,9 @@ export default function SearchPage() {
               <Text style={styles.clearText}>⨉</Text>
             </Pressable>
           )}
+          <Pressable onPress={() => setShowFavoritesModal(true)}>
+            <FaBook style={styles.bookIcon} />
+          </Pressable>
         </View>
         <Pressable onPress={() => handleInputChange('')} style={styles.cancelButton}>
           <Text style={styles.cancelText}>取消</Text>
@@ -124,6 +124,18 @@ export default function SearchPage() {
 
       {/* 自訂鍵盤 */}
       {showKeyboard && <Keyboard onKeyPress={handleKeyPress} />}
+
+      {/* 收藏頁 Modal */}
+      {showFavoritesModal && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Pressable onPress={() => setShowFavoritesModal(false)} style={styles.modalClose}>
+              <Text style={styles.modalCloseText}>✕</Text>
+            </Pressable>
+            <FavoritesRoutes />
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -135,13 +147,40 @@ const styles = StyleSheet.create({
   searchIcon: { marginRight: 8, color: '#888' },
   searchInput: { flex: 1, fontSize: 16, color: '#000', paddingVertical: 0, outlineStyle: 'none' },
   clearText: { fontSize: 18, color: '#888', marginHorizontal: 8 },
+  bookIcon: { fontSize: 18, color: '#888', marginLeft: 8 },
   cancelButton: { marginLeft: 8, backgroundColor: '#3553B9', paddingVertical: 6, paddingHorizontal: 16, borderRadius: 20 },
   cancelText: { color: '#fff', fontSize: 16, fontWeight: '500' },
   keyboardToggle: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8, marginBottom: 24 },
   keyboardCircle: { backgroundColor: '#5B636A', borderRadius: 20, padding: 8, marginRight: 16 },
   keyboardIcon: { fontSize: 20, color: '#fff' },
-  resultBox: { flex: 1 }
+  resultBox: { flex: 1 },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 999
+  },
+  modalBox: {
+    width: '90%',
+    maxHeight: '80%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16
+  },
+  modalClose: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    zIndex: 1000
+  },
+  modalCloseText: {
+    fontSize: 20,
+    color: '#888'
+  }
 });
+
 
 
 
