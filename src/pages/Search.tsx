@@ -8,6 +8,7 @@ export default function SearchPage() {
   const [query, setQuery] = useState('');
   const [routes, setRoutes] = useState<{ id: string; name: string }[]>([]);
   const [results, setResults] = useState<{ id: string; name: string }[]>([]);
+  const [favorites, setFavorites] = useState<string[]>([]);
   const [showKeyboard, setShowKeyboard] = useState(true);
   const inputRef = useRef<any>(null);
 
@@ -24,14 +25,11 @@ export default function SearchPage() {
             name: cols[3].trim()
           }));
         setRoutes(parsed);
-        setResults([]); // 初始不顯示任何結果
       });
   }, []);
 
-  const handleSearch = (text: string) => {
+  const searchRoutes = (text: string) => {
     const normalized = text.trim();
-    setQuery(normalized);
-
     if (normalized === '') {
       setResults([]);
       return;
@@ -49,20 +47,30 @@ export default function SearchPage() {
     setResults(filtered);
   };
 
+  const handleInputChange = (text: string) => {
+    setQuery(text);
+    searchRoutes(text);
+  };
+
   const handleKeyPress = (key: string) => {
-    if (key === '重設') {
-      handleSearch('');
-    } else if (key === '⌫') {
-      handleSearch(query.slice(0, -1));
-    } else {
-      handleSearch(query + key);
-    }
+    let next = '';
+    if (key === '重設') next = '';
+    else if (key === '⌫') next = query.slice(0, -1);
+    else next = query + key;
+
+    setQuery(next);
+    searchRoutes(next);
+  };
+
+  const toggleFavorite = (id: string) => {
+    setFavorites(prev =>
+      prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
+    );
   };
 
   const toggleKeyboard = () => {
-    setShowKeyboard(prev => !prev);
-    if (!showKeyboard) inputRef.current?.focus();
-    else inputRef.current?.blur();
+    setShowKeyboard(true); // 強制展開
+    inputRef.current?.blur(); // 取消輸入框焦點，避免自動收回
   };
 
   return (
@@ -75,18 +83,20 @@ export default function SearchPage() {
             ref={inputRef}
             style={styles.searchInput}
             value={query}
-            onChangeText={handleSearch}
+            onChangeText={handleInputChange}
             placeholder="輸入路線編號"
             placeholderTextColor="#ccc"
-            onFocus={() => setShowKeyboard(false)}
+            onFocus={() => {
+              if (showKeyboard) setShowKeyboard(false); // 只在鍵盤展開時收回
+            }}
           />
           {query.length > 0 && (
-            <Pressable onPress={() => handleSearch('')}>
+            <Pressable onPress={() => handleInputChange('')}>
               <Text style={styles.clearText}>⨉</Text>
             </Pressable>
           )}
         </View>
-        <Pressable onPress={() => handleSearch('')} style={styles.cancelButton}>
+        <Pressable onPress={() => handleInputChange('')} style={styles.cancelButton}>
           <Text style={styles.cancelText}>取消</Text>
         </Pressable>
       </View>
@@ -101,12 +111,19 @@ export default function SearchPage() {
       {/* 搜尋結果 */}
       <ScrollView style={styles.resultBox}>
         {results.map(route => (
-          <RouteCard key={route.id} id={route.id} name={route.name} displayId={query} />
+          <RouteCard
+            key={route.id}
+            id={route.id}
+            name={route.name}
+            displayId={query}
+            isFavorite={favorites.includes(route.id)}
+            onToggleFavorite={() => toggleFavorite(route.id)}
+          />
         ))}
       </ScrollView>
 
       {/* 自訂鍵盤 */}
-      <Keyboard onKeyPress={handleKeyPress} />
+      {showKeyboard && <Keyboard onKeyPress={handleKeyPress} />}
     </View>
   );
 }
@@ -125,4 +142,8 @@ const styles = StyleSheet.create({
   keyboardIcon: { fontSize: 20, color: '#fff' },
   resultBox: { flex: 1 }
 });
+
+
+
+
 

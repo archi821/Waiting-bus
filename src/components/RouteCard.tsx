@@ -1,14 +1,14 @@
-import { View, Text, StyleSheet } from 'react-native-web';
+import { View, Text, StyleSheet, Pressable } from 'react-native-web';
 
-export default function RouteCard({
-  id,
-  name,
-  displayId
-}: {
+type Props = {
   id: string;
   name: string;
   displayId?: string;
-}) {
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
+};
+
+export default function RouteCard({ id, name, displayId, isFavorite, onToggleFavorite }: Props) {
   const getColor = () => {
     if (id === '99') return { bg: '#FF8000', text: '#fff' };
     if (id.startsWith('R')) return { bg: '#2E8B57', text: '#fff' };
@@ -20,10 +20,15 @@ export default function RouteCard({
 
   return (
     <View style={styles.card}>
-      <View style={[styles.badge, { backgroundColor: bg }]}>
-        <Text style={[styles.badgeText, { color: text }]}>{shownId}</Text>
+      <View style={styles.left}>
+        <View style={[styles.badge, { backgroundColor: bg }]}>
+          <Text style={[styles.badgeText, { color: text }]}>{shownId}</Text>
+        </View>
+        <Text style={styles.boldText}>{name}</Text>
       </View>
-      <Text style={styles.boldText}>{name}</Text>
+      <Pressable onPress={onToggleFavorite}>
+        <Text style={styles.favorite}>{isFavorite ? '★' : '☆'}</Text>
+      </Pressable>
     </View>
   );
 }
@@ -33,7 +38,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#f2f4f7',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 12
+    marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  left: {
+    flexDirection: 'column',
+    flexShrink: 1
   },
   badge: {
     borderRadius: 20,
@@ -50,6 +62,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: '#333'
+  },
+  favorite: {
+    fontSize: 24,
+    color: '#FFB300',
+    paddingLeft: 12
   }
 });
+
 

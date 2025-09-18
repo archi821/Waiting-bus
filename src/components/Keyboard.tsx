@@ -1,11 +1,11 @@
-import { View, Text, Pressable, StyleSheet, GestureResponderEvent } from 'react-native-web';
+import { View, Text, Pressable, StyleSheet } from 'react-native-web';
 
 type KeyboardProps = {
   onKeyPress: (key: string) => void;
 };
 
 export default function Keyboard({ onKeyPress }: KeyboardProps) {
-  const keys: string[][] = [
+  const keys = [
     ['N', '1', '2', '3'],
     ['R', '4', '5', '6'],
     ['S', '7', '8', '9'],
@@ -68,6 +68,8 @@ const styles = StyleSheet.create({
     fontWeight: '700'
   }
 });
+
+
 
 
 
