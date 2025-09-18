@@ -1,27 +1,44 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, ScrollView } from 'react-native-web';
 import { FaSearch, FaKeyboard } from 'react-icons/fa';
 
-const mockRoutes = [
-  { id: 'N9', name: 'N9 夜間公車 - Coquitlam Central' },
-  { id: 'R668', name: 'R5 Hastings St - SFU' },
-  { id: 'S', name: 'S Waterfront - Lonsdale Quay' },
-  { id: 'W', name: 'W Waterfront - Mission' },
-  { id: '9', name: '9 Commercial-Broadway - Boundary' }
-];
-
 export default function SearchPage() {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<typeof mockRoutes>([]);
+  const [routes, setRoutes] = useState<{ id: string; name: string }[]>([]);
+  const [results, setResults] = useState<{ id: string; name: string }[]>([]);
   const [showCustomKeyboard, setShowCustomKeyboard] = useState(true);
   const inputRef = useRef<any>(null);
 
+  useEffect(() => {
+    fetch('/google_transit/routes.txt')
+      .then((res) => res.text())
+      .then((text) => {
+        const lines = text.split('\n').slice(1);
+        const parsed = lines
+          .map((line) => line.split(','))
+          .filter((cols) => cols.length >= 4 && cols[2] && cols[3])
+          .map((cols) => ({
+            id: cols[2].trim(),
+            name: cols[3].trim()
+          }));
+        setRoutes(parsed);
+        setResults(parsed);
+      })
+      .catch((err) => {
+        console.error('讀取 routes.txt 失敗:', err);
+      });
+  }, []);
+
   const handleSearch = (text: string) => {
     setQuery(text);
-    const filtered = mockRoutes.filter(route =>
-      route.id.toLowerCase().includes(text.toLowerCase()) ||
-      route.name.includes(text)
-    );
+    const normalized = text.trim();
+    const inputNum = parseInt(normalized, 10);
+
+    const filtered = routes.filter(route => {
+      const routeNum = parseInt(route.id, 10);
+      return !isNaN(routeNum) && !isNaN(inputNum) && routeNum === inputNum;
+    });
+
     setResults(filtered);
   };
 
@@ -47,7 +64,6 @@ export default function SearchPage() {
 
   return (
     <View style={styles.container}>
-      {/* 搜尋列 + 取消 */}
       <View style={styles.searchRow}>
         <View style={styles.searchBar}>
           <FaSearch style={styles.searchIcon} />
@@ -56,7 +72,7 @@ export default function SearchPage() {
             style={styles.searchInput}
             value={query}
             onChangeText={handleSearch}
-            placeholder="今天要搭哪輛車"
+            placeholder="輸入路線編號"
             placeholderTextColor="#ccc"
             onFocus={() => setShowCustomKeyboard(false)}
           />
@@ -72,25 +88,29 @@ export default function SearchPage() {
         </Pressable>
       </View>
 
-      {/* 小鍵盤圖示（右側圓底） */}
       <View style={styles.keyboardToggle}>
         <Pressable onPress={toggleKeyboard} style={styles.keyboardCircle}>
           <FaKeyboard style={styles.keyboardIcon} />
         </Pressable>
       </View>
 
-      {/* 搜尋結果（有輸入時才顯示） */}
-      {query.length > 0 && (
+      {query.length > 0 && results.length > 0 && (
         <ScrollView style={styles.resultBox}>
           {results.map(route => (
-            <Text key={route.id} style={styles.resultItem}>
-              ⭐ {route.name}
-            </Text>
+            <View key={route.id} style={styles.card}>
+              <Text style={styles.cardTitle}>{route.id}</Text>
+              <Text style={styles.cardSubtitle}>{route.name}</Text>
+            </View>
           ))}
         </ScrollView>
       )}
 
-      {/* 自訂鍵盤 */}
+      {query.length > 0 && results.length === 0 && (
+        <View style={styles.noResult}>
+          <Text style={styles.noResultText}>找不到符合的路線</Text>
+        </View>
+      )}
+
       {showCustomKeyboard && (
         <View style={styles.keyboard}>
           {[
@@ -190,11 +210,32 @@ const styles = StyleSheet.create({
     flex: 1,
     marginBottom: 12
   },
-  resultItem: {
+  card: {
+    backgroundColor: '#f2f4f7',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333'
+  },
+  cardSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4
+  },
+  noResult: {
+    padding: 24,
+    alignItems: 'center'
+  },
+  noResultText: {
     fontSize: 16,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderColor: '#eee'
+    color: '#999'
   },
   keyboard: {
     marginTop: 8
@@ -223,3 +264,9 @@ const styles = StyleSheet.create({
     fontWeight: '700'
   }
 });
+
+
+
+
+
+
