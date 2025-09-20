@@ -1,5 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Papa from 'papaparse';
+import { selectStyle, inputStyle, buttonStyle } from '../styles/styles';
+import HistoryList from '../components/HistoryList';
+import ClearHistoryButton from '../components/ClearHistoryButton';
 
 type Stop = { stop_id: string; stop_name: string };
 type StopTime = {
@@ -10,21 +13,26 @@ type StopTime = {
   arrival_time: string;
 };
 type Trip = { trip_id: string; route_id: string; service_id: string; trip_headsign: string };
+type Result = {
+  trip_id: string;
+  departure_time: string;
+  arrival_time: string;
+  departure_stop_name: string;
+  arrival_stop_name: string;
+  economy_price: string;
+  sleeper_price: string;
+};
 
 export default function Train() {
   const [stops, setStops] = useState<Stop[]>([]);
   const [stopTimes, setStopTimes] = useState<StopTime[]>([]);
   const [trips, setTrips] = useState<Trip[]>([]);
-
   const [departure, setDeparture] = useState('');
   const [arrival, setArrival] = useState('');
   const [dateTime, setDateTime] = useState('');
-  const [scheduleType, setScheduleType] = useState('departure');
-  const [results, setResults] = useState<
-    { trip_id: string; departure_time: string; arrival_time: string }[]
-  >([]);
+  const [scheduleType, setScheduleType] = useState<'departure' | 'arrival'>('departure');
   const [history, setHistory] = useState<string[]>([]);
- 
+
   useEffect(() => {
     Promise.all([
       fetch('/viatrain_gtfs/stops.txt').then(res => res.text()),
@@ -35,13 +43,10 @@ export default function Train() {
       const parsedStopTimes = Papa.parse<StopTime>(stopTimesText, { header: true });
       const parsedTrips = Papa.parse<Trip>(tripsText, { header: true });
 
-      const activeStopIds = new Set(
-        parsedStopTimes.data.map(st => st.stop_id).filter(Boolean)
-      );
-
-      const activeStops = parsedStops.data.filter(
-        s => s.stop_id && s.stop_name && activeStopIds.has(s.stop_id)
-      );
+      const activeStopIds = new Set(parsedStopTimes.data.map(st => st.stop_id).filter(Boolean));
+      const activeStops = parsedStops.data
+        .filter(s => s.stop_id && s.stop_name && activeStopIds.has(s.stop_id))
+        .sort((a, b) => a.stop_name.localeCompare(b.stop_name));
 
       setStops(activeStops);
       setStopTimes(parsedStopTimes.data);
@@ -59,8 +64,16 @@ export default function Train() {
   const handleSearch = () => {
     const departureStopId = stops.find(s => s.stop_name === departure)?.stop_id;
     const arrivalStopId = stops.find(s => s.stop_name === arrival)?.stop_id;
+    if (!departureStopId || !arrivalStopId) return;
 
-    const filtered = trips
+    const selectedMinutes = dateTime
+      ? (() => {
+          const dt = new Date(dateTime);
+          return dt.getHours() * 60 + dt.getMinutes();
+        })()
+      : null;
+
+    const filtered: Result[] = trips
       .map((trip) => {
         const stopsInTrip = stopTimes.filter(st => st.trip_id === trip.trip_id);
         const departureStop = stopsInTrip.find(st => st.stop_id === departureStopId);
@@ -69,189 +82,112 @@ export default function Train() {
         if (!departureStop || !arrivalStop) return null;
         if (parseInt(departureStop.stop_sequence) >= parseInt(arrivalStop.stop_sequence)) return null;
 
+        const timeToCompare = scheduleType === 'departure'
+          ? departureStop.departure_time
+          : arrivalStop.arrival_time;
+
+        const [hh, mm] = timeToCompare.split(':').map(Number);
+        let totalMinutes = hh * 60 + mm;
+        if (hh >= 24) totalMinutes += 1440;
+
+        if (selectedMinutes !== null && totalMinutes < selectedMinutes) return null;
+
         return {
           trip_id: trip.trip_id,
           departure_time: departureStop.departure_time,
           arrival_time: arrivalStop.arrival_time,
+          departure_stop_name: departure,
+          arrival_stop_name: arrival,
+          economy_price: '$288 起',
+          sleeper_price: '$1315 起'
         };
       })
-      .filter(Boolean) as { trip_id: string; departure_time: string; arrival_time: string }[];
-
-    setResults(filtered);
-    
+      .filter((r): r is Result => r !== null);
 
     const record = `${departure} → ${arrival}（${filtered.length} 筆結果）`;
     setHistory(prev => [record, ...prev]);
+
+    localStorage.setItem('tripResults', JSON.stringify(filtered));
+    window.location.href = '/trip-detail';
   };
 
   const clearHistory = () => {
     setHistory([]);
   };
-  
+
   return (
-  <div style={{ fontFamily: 'sans-serif', backgroundColor: '#f5f5f5', minHeight: '100vh', position: 'relative' }}>
-    <header style={{
-      backgroundColor: '#FFCC00',
-      padding: '1rem',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      gap: '0.5rem',
-    }}>
-      <h1 style={{ color: 'white', margin: 0, fontSize: '1.5rem' }}>VIA Rail Canada🍁</h1>
-    </header>
+    <div style={{ fontFamily: 'sans-serif', backgroundColor: '#f5f5f5', minHeight: '100vh', position: 'relative' }}>
+      <header style={{ backgroundColor: '#FFCC00', padding: '1rem', textAlign: 'center' }}>
+        <h1 style={{ color: 'white', margin: 0, fontSize: '1.5rem' }}>VIA Rail Canada 🍁</h1>
+      </header>
 
-    <main style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      marginTop: '2rem',
-    }}>
-      {/* 出發欄位 */}
-      <div style={{ width: '60%', marginBottom: '1rem' }}>
-        <label style={{ marginBottom: '0.5rem', display: 'block' }}>出發</label>
-        <select
-          value={departure}
-          onChange={(e) => setDeparture(e.target.value)}
-          style={{
-            width: '100%',
-            borderRadius: '999px',
-            padding: '0.5rem 1rem',
-            border: '1px solid #ccc',
-          }}
-        >
-          <option value="">請選擇出發地</option>
-          {stops.map((stop) => (
-            <option key={stop.stop_id} value={stop.stop_name}>{stop.stop_name}</option>
-          ))}
-        </select>
-      </div>
+      <main style={{
+        maxWidth: '600px',
+        margin: '2rem auto',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1.5rem',
+      }}>
+        <div>
+          <label style={{ marginBottom: '0.5rem', display: 'block' }}>出發</label>
+          <select value={departure} onChange={e => setDeparture(e.target.value)} style={selectStyle}>
+            <option value="">請選擇出發地</option>
+            {stops.map(s => (
+              <option key={s.stop_id} value={s.stop_name}>{s.stop_name}</option>
+            ))}
+          </select>
+        </div>
 
-      {/* 交換按鈕 */}
-      <div
-        onClick={swapStops}
-        style={{
-          backgroundColor: '#eee',
-          borderRadius: '50%',
-          position: 'absolute',
-          right: '190px',
-          width: '27px',
-          height: '27px',
-          top: '35%',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-          cursor: 'pointer',
-        }}
-      >
-        🔃
-      </div>
+        <div style={{ position: 'relative' }}>
+          <label style={{ marginBottom: '0.5rem', display: 'block' }}>到達</label>
+          <select value={arrival} onChange={e => setArrival(e.target.value)} style={selectStyle}>
+            <option value="">請選擇抵達地</option>
+            {stops.map(s => (
+              <option key={s.stop_id} value={s.stop_name}>{s.stop_name}</option>
+            ))}
+          </select>
+          <div
+            onClick={swapStops}
+            style={{
+              position: 'absolute',
+              top: '10%',
+              right: '0.5rem',
+              transform: 'translateY(-50%)',
+              backgroundColor: '#eee',
+              borderRadius: '50%',
+              width: '28px',
+              height: '28px',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+              cursor: 'pointer',
+            }}
+          >
+            🔃
+          </div>
+        </div>
 
-      {/* 到達欄位 */}
-      <div style={{ width: '60%', marginBottom: '1rem' }}>
-        <label style={{ marginBottom: '0.5rem', display: 'block' }}>到達</label>
-        <select
-          value={arrival}
-          onChange={(e) => setArrival(e.target.value)}
-          style={{
-            width: '100%',
-            borderRadius: '999px',
-            padding: '0.5rem 1rem',
-            border: '1px solid #ccc',
-          }}
-        >
-          <option value="">請選擇抵達地</option>
-          {stops.map((stop) => (
-            <option key={stop.stop_id} value={stop.stop_name}>{stop.stop_name}</option>
-          ))}
-        </select>
-      </div>
+        <div>
+          <label style={{ marginBottom: '0.5rem', display: 'block' }}>時間</label>
+          <input type="datetime-local" value={dateTime} onChange={e => setDateTime(e.target.value)} style={inputStyle} />
+        </div>
 
-      {/* 時間欄位 */}
-      <div style={{ width: '60%', marginBottom: '1rem' }}>
-        <label style={{ marginBottom: '0.5rem', display: 'block' }}>時間</label>
-        <input
-          type="datetime-local"
-          value={dateTime}
-          onChange={(e) => setDateTime(e.target.value)}
-          style={{
-            width: '100%',
-            borderRadius: '999px',
-            padding: '0.5rem 1rem',
-            border: '1px solid #ccc',
-            boxSizing: 'border-box',
-            fontSize: '1rem',
-          }}
-        />
-      </div>
+        <div>
+          <label style={{ marginBottom: '0.5rem', display: 'block' }}>設定</label>
+          <select value={scheduleType} onChange={e => setScheduleType(e.target.value as 'departure' | 'arrival')} style={selectStyle}>
+            <option value="departure">出發時間</option>
+            <option value="arrival">抵達時間</option>
+          </select>
+        </div>
 
-      {/* 設定欄位 */}
-      <div style={{ width: '60%', marginBottom: '1rem' }}>
-        <label style={{ marginBottom: '0.5rem', display: 'block' }}>設定</label>
-        <select
-          value={scheduleType}
-          onChange={(e) => setScheduleType(e.target.value)}
-          style={{
-            width: '100%',
-            borderRadius: '999px',
-            padding: '0.5rem 1rem',
-            border: '1px solid #ccc',
-          }}
-        >
-          <option value="departure">出發時間</option>
-          <option value="arrival">抵達時間</option>
-        </select>
-      </div>
+        <button onClick={handleSearch} disabled={!isSearchEnabled} style={buttonStyle(isSearchEnabled)}>
+          查詢時刻
+        </button>
+      </main>
 
-      {/* 查詢按鈕 */}
-      <button
-        onClick={handleSearch}
-        disabled={!isSearchEnabled}
-        style={{
-          marginTop: '1rem',
-          padding: '0.5rem 1rem',
-          backgroundColor: isSearchEnabled ? '#FFCC00' : '#ccc',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: isSearchEnabled ? 'pointer' : 'not-allowed',
-        }}
-      >
-        查詢時刻
-      </button>
- 
-    </main>
-
-    {/* 左下：歷史紀錄（永遠顯示） */}
-<div style={{
-  position: 'fixed',
-  bottom: '1rem',
-  left: '1rem',
-}}>
-  <h4 style={{ marginBottom: '0.5rem' }}>歷史紀錄</h4>
-  <ul style={{ paddingLeft: '1rem', margin: 0 }}>
-    {history.map((h, i) => (
-      <li key={i} style={{ marginBottom: '0.25rem' }}>{h}</li>
-    ))}
-  </ul>
-</div>
-
-    {/* 右下：清除歷史紀錄（外觀純文字，功能正常） */}
-    <div
-      onClick={clearHistory}
-      style={{
-        position: 'fixed',
-        bottom: '1rem',
-        right: '1rem',
-        color: '#888',
-        fontSize: '0.9rem',
-        userSelect: 'none',
-      }}
-    >
-      🗑 清除歷史紀錄
+      <HistoryList history={history} />
+      <ClearHistoryButton onClear={clearHistory} />
     </div>
-  </div>
-);}
-
-
+  );
+}

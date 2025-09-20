@@ -19,11 +19,8 @@ export default function NearbyPage() {
         const { latitude, longitude } = pos.coords;
         setUserLocation([latitude, longitude]);
 
-        const mockStops: Stop[] = [
-          { id: '1', name: 'Kingsway & Edmonds', lat: latitude + 0.001, lng: longitude + 0.001 },
-          { id: '2', name: 'Nelson & Imperial', lat: latitude - 0.0015, lng: longitude - 0.001 },
-        ];
-        setStops(mockStops);
+        // 如果你已經在 MapView 裡畫所有站牌，這段可以省略
+        // setStops([...]); ← 這裡可以接真實資料或留空
       },
       () => setError('無法取得你的位置'),
       { enableHighAccuracy: true }
@@ -35,4 +32,9 @@ export default function NearbyPage() {
 
   return <MapView userLocation={userLocation} stops={stops} />;
 }
+
+
+
+
+
 

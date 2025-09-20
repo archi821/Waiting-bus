@@ -1,4 +1,4 @@
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -15,7 +15,7 @@ export interface MapViewProps {
 }
 
 export default function MapView({ userLocation, stops }: MapViewProps) {
-  const DefaultIcon = L.icon({
+  const stopIcon = L.icon({
     iconUrl: '/marker-icon.png',
     shadowUrl: '/marker-shadow.png',
     iconSize: [25, 41],
@@ -24,23 +24,35 @@ export default function MapView({ userLocation, stops }: MapViewProps) {
     shadowSize: [41, 41],
   });
 
-  L.Marker.prototype.options.icon = DefaultIcon;
+  const [lat, lng] = userLocation;
 
   return (
-    <MapContainer center={userLocation} zoom={15} style={{ height: '100vh', width: '100%' }}>
+    <MapContainer center={[lat, lng]} zoom={15} style={{ height: '100vh', width: '100%' }}>
       <TileLayer
         attribution='&copy; OpenStreetMap contributors'
         url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
       />
-      <Marker position={userLocation}>
-        <Popup>你的位置</Popup>
-      </Marker>
+
+      {/* 使用者定位：紅色小圓點 */}
+      <Circle
+        center={{ lat, lng }}
+        radius={5}
+        pathOptions={{ color: 'red', fillColor: 'red', fillOpacity: 1 }}
+      />
+
+      {/* 顯示站牌 */}
       {stops.map((stop) => (
-        <Marker key={stop.id} position={[stop.lat, stop.lng]}>
+        <Marker
+          key={stop.id}
+          position={[stop.lat, stop.lng]}
+          icon={stopIcon}
+        >
           <Popup>{stop.name}</Popup>
         </Marker>
       ))}
     </MapContainer>
   );
 }
+
+
 

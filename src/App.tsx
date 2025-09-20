@@ -16,6 +16,7 @@ import TrainPage from './pages/Train';
 import SeabusPage from './pages/Seabus';
 import ShuttlesPage from './pages/Shuttles';
 import SettingsPage from './pages/Settings';
+import TripDetail from './pages/TripDetail'; // ← 加這行在最上面
 
 function PlaceholderPage({ title }: { title: string }) {
   return (
@@ -76,6 +77,7 @@ export default function App() {
         <Route path="/planner" element={<PlannerPage />} />
         <Route path="/favorites"element={<FavoritesPage />} />
         <Route path="/stop/:stopId" element={<StopDetail />} />
+        <Route path="/trip-detail" element={<TripDetail />} />
       </Routes>
     </BrowserRouter>
   );
