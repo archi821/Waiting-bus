@@ -34,6 +34,18 @@ export default function Train() {
   const [history, setHistory] = useState<string[]>([]);
 
   useEffect(() => {
+    // ✅ 載入查詢歷史
+    const storedHistory = localStorage.getItem('searchHistory');
+    if (storedHistory) {
+      try {
+        const parsed = JSON.parse(storedHistory);
+        setHistory(Array.isArray(parsed) ? parsed : []);
+      } catch {
+        setHistory([]);
+      }
+    }
+
+    // ✅ 載入 GTFS 資料
     Promise.all([
       fetch('/viatrain_gtfs/stops.txt').then(res => res.text()),
       fetch('/viatrain_gtfs/stop_times.txt').then(res => res.text()),
@@ -104,15 +116,22 @@ export default function Train() {
       })
       .filter((r): r is Result => r !== null);
 
-    const record = `${departure} → ${arrival}（${filtered.length} 筆結果）`;
-    setHistory(prev => [record, ...prev]);
-
+    // ✅ 儲存查詢結果
     localStorage.setItem('tripResults', JSON.stringify(filtered));
+
+    // ✅ 儲存查詢歷史
+    const record = `${departure} → ${arrival}（${filtered.length} 筆結果）`;
+    const newHistory = [record, ...history];
+    setHistory(newHistory);
+    localStorage.setItem('searchHistory', JSON.stringify(newHistory));
+
     window.location.href = '/trip-detail';
   };
 
+  // ✅ 清除查詢歷史
   const clearHistory = () => {
     setHistory([]);
+    localStorage.removeItem('searchHistory');
   };
 
   return (
