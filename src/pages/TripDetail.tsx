@@ -53,6 +53,20 @@ export default function TripDetail() {
   );
 }
 
+function formatTime(raw: string): string {
+  const [h, m] = raw.split(':').map(Number);
+  const hour = h % 24;
+  return `${String(hour).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+function isNextDay(start: string, end: string): boolean {
+  const [sh, sm] = start.split(':').map(Number);
+  const [eh, em] = end.split(':').map(Number);
+  const startMinutes = sh * 60 + sm;
+  const endMinutes = eh * 60 + em;
+  return endMinutes < startMinutes;
+}
+
 function computeDuration(start: string, end: string): string {
   const [sh, sm] = start.split(':').map(Number);
   const [eh, em] = end.split(':').map(Number);
@@ -63,19 +77,6 @@ function computeDuration(start: string, end: string): string {
   const hours = Math.floor(diff / 60);
   const minutes = diff % 60;
   return `${hours} 小時 ${minutes} 分`;
-}
-
-function isNextDay(start: string, end: string): boolean {
-  const [sh] = start.split(':').map(Number);
-  const [eh] = end.split(':').map(Number);
-  return eh < sh;
-}
-
-function formatTime(raw: string): string {
-  const [h, m] = raw.split(':').map(Number);
-  const day = Math.floor(h / 24);
-  const hour = h % 24;
-  return `${day > 0 ? `第 ${day} 天 ` : ''}${String(hour).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
 const styles = {
@@ -96,6 +97,7 @@ const styles = {
     cursor: 'pointer',
   },
 };
+
 
 
 
