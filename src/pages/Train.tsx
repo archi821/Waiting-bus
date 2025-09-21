@@ -13,6 +13,15 @@ type StopTime = {
   arrival_time: string;
 };
 type Trip = { trip_id: string; route_id: string; service_id: string; trip_headsign: string };
+
+type Weekday = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+type Calendar = {
+  service_id: string;
+  start_date: string;
+  end_date: string;
+} & {
+  [key in 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday']: string;
+};
 type Result = {
   trip_id: string;
   departure_time: string;
@@ -21,12 +30,14 @@ type Result = {
   arrival_stop_name: string;
   economy_price: string;
   sleeper_price: string;
+  departure_date: string;
 };
 
 export default function Train() {
   const [stops, setStops] = useState<Stop[]>([]);
   const [stopTimes, setStopTimes] = useState<StopTime[]>([]);
   const [trips, setTrips] = useState<Trip[]>([]);
+  const [calendar, setCalendar] = useState<Calendar[]>([]);
   const [departure, setDeparture] = useState('');
   const [arrival, setArrival] = useState('');
   const [dateTime, setDateTime] = useState('');
@@ -34,7 +45,6 @@ export default function Train() {
   const [history, setHistory] = useState<string[]>([]);
 
   useEffect(() => {
-    // ✅ 載入查詢歷史
     const storedHistory = localStorage.getItem('searchHistory');
     if (storedHistory) {
       try {
@@ -45,15 +55,16 @@ export default function Train() {
       }
     }
 
-    // ✅ 載入 GTFS 資料
     Promise.all([
       fetch('/viatrain_gtfs/stops.txt').then(res => res.text()),
       fetch('/viatrain_gtfs/stop_times.txt').then(res => res.text()),
-      fetch('/viatrain_gtfs/trips.txt').then(res => res.text())
-    ]).then(([stopsText, stopTimesText, tripsText]) => {
+      fetch('/viatrain_gtfs/trips.txt').then(res => res.text()),
+      fetch('/viatrain_gtfs/calendar.txt').then(res => res.text())
+    ]).then(([stopsText, stopTimesText, tripsText, calendarText]) => {
       const parsedStops = Papa.parse<Stop>(stopsText, { header: true });
       const parsedStopTimes = Papa.parse<StopTime>(stopTimesText, { header: true });
       const parsedTrips = Papa.parse<Trip>(tripsText, { header: true });
+      const parsedCalendar = Papa.parse<Calendar>(calendarText, { header: true });
 
       const activeStopIds = new Set(parsedStopTimes.data.map(st => st.stop_id).filter(Boolean));
       const activeStops = parsedStops.data
@@ -63,6 +74,7 @@ export default function Train() {
       setStops(activeStops);
       setStopTimes(parsedStopTimes.data);
       setTrips(parsedTrips.data);
+      setCalendar(parsedCalendar.data);
     });
   }, []);
 
@@ -71,21 +83,25 @@ export default function Train() {
     setArrival(departure);
   };
 
-  const isSearchEnabled = departure !== '' && arrival !== '';
+  const isSearchEnabled = departure !== '' && arrival !== '' && dateTime !== '';
 
   const handleSearch = () => {
     const departureStopId = stops.find(s => s.stop_name === departure)?.stop_id;
     const arrivalStopId = stops.find(s => s.stop_name === arrival)?.stop_id;
-    if (!departureStopId || !arrivalStopId) return;
+    if (!departureStopId || !arrivalStopId || !dateTime) return;
 
-    const selectedMinutes = dateTime
-      ? (() => {
-          const dt = new Date(dateTime);
-          return dt.getHours() * 60 + dt.getMinutes();
-        })()
-      : null;
+    const queryDate = new Date(dateTime);
+    const yyyymmdd = queryDate.toISOString().slice(0, 10).replace(/-/g, '');
+    const weekday = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][queryDate.getDay()] as Weekday;
+    const activeServiceIds = calendar
+      .filter(c => c.start_date <= yyyymmdd && c.end_date >= yyyymmdd && c[weekday] === '1')
+      .map(c => c.service_id);
 
-    const filtered: Result[] = trips
+    const activeTrips = trips.filter(trip => activeServiceIds.includes(trip.service_id));
+
+    const selectedMinutes = queryDate.getHours() * 60 + queryDate.getMinutes();
+
+    const filtered: Result[] = activeTrips
       .map((trip) => {
         const stopsInTrip = stopTimes.filter(st => st.trip_id === trip.trip_id);
         const departureStop = stopsInTrip.find(st => st.stop_id === departureStopId);
@@ -102,7 +118,7 @@ export default function Train() {
         let totalMinutes = hh * 60 + mm;
         if (hh >= 24) totalMinutes += 1440;
 
-        if (selectedMinutes !== null && totalMinutes < selectedMinutes) return null;
+        if (totalMinutes < selectedMinutes) return null;
 
         return {
           trip_id: trip.trip_id,
@@ -111,15 +127,14 @@ export default function Train() {
           departure_stop_name: departure,
           arrival_stop_name: arrival,
           economy_price: '$288 起',
-          sleeper_price: '$1315 起'
+          sleeper_price: '$1315 起',
+          departure_date: queryDate.toISOString().slice(0, 10)
         };
       })
       .filter((r): r is Result => r !== null);
 
-    // ✅ 儲存查詢結果
     localStorage.setItem('tripResults', JSON.stringify(filtered));
 
-    // ✅ 儲存查詢歷史
     const record = `${departure} → ${arrival}（${filtered.length} 筆結果）`;
     const newHistory = [record, ...history];
     setHistory(newHistory);
@@ -128,11 +143,12 @@ export default function Train() {
     window.location.href = '/trip-detail';
   };
 
-  // ✅ 清除查詢歷史
   const clearHistory = () => {
     setHistory([]);
     localStorage.removeItem('searchHistory');
   };
+
+// ...（前面程式碼完全照你原本的）...
 
   return (
     <div style={{ fontFamily: 'sans-serif', backgroundColor: '#f5f5f5', minHeight: '100vh', position: 'relative' }}>
@@ -174,14 +190,18 @@ export default function Train() {
               transform: 'translateY(-50%)',
               backgroundColor: '#eee',
               borderRadius: '50%',
-              width: '28px',
-              height: '28px',
+              width: 28,
+              height: 28,
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
               boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
               cursor: 'pointer',
+              fontSize: 18,
+              color: '#333',
+              userSelect: 'none',
             }}
+            title="交換出發與到達地"
           >
             🔃
           </div>
