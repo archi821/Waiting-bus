@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
+      '@': resolve(__dirname, 'src'), // ✅ 加這行
       'react-native': 'react-native-web'
     }
   },

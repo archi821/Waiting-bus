@@ -1,4 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
+
+import {
+  convertTimeBetweenZones,
+  getTripDuration,
+  getTimeZone
+} from '@/utils/time';
 
 type Result = {
   trip_id: string;
@@ -42,96 +48,76 @@ export default function TripDetail() {
       });
   }, []);
 
-  const formatTime24 = (timeStr: string) => {
-    const [h, m] = timeStr.split(':').map(Number);
-    const hour = h % 24;
-    return `${hour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-  };
+  // ✅ 用 useMemo 處理所有 tripRows，避免在 JSX 裡呼叫 hook
+  const tripRows = useMemo(() => {
+    return trips.map((trip, i) => {
+      const ticketInfo = ticketingMap.get(trip.trip_id) || {};
+      const originId = ticketInfo.origin_stop_id || '344';
+      const destId = ticketInfo.destination_stop_id || '344';
+      const trainNumber = ticketInfo.trip_short_name || trip.trip_id;
 
-  const formatArrivalDate = (depDate: string, arrTime: string) => {
-    const [ah] = arrTime.split(':').map(Number);
-    const base = new Date(depDate);
-    const extraDays = Math.floor(ah / 24);
-    base.setDate(base.getDate() + extraDays);
-    return `${base.getMonth() + 1}/${base.getDate()}`;
-  };
+      const originZone = getTimeZone(originId);
+      const destZone = getTimeZone(destId);
 
-  const computeDuration = (dep: string, arr: string) => {
-    const [dh, dm] = dep.split(':').map(Number);
-    const [ah, am] = arr.split(':').map(Number);
-    let depMin = dh * 60 + dm;
-    let arrMin = ah * 60 + am;
-    if (arrMin < depMin) arrMin += 1440;
-    const dur = arrMin - depMin;
-    const h = Math.floor(dur / 60);
-    const m = dur % 60;
-    return `${h} 小時 ${m} 分`;
-  };
+      const dep = convertTimeBetweenZones(trip.departure_date, trip.departure_time, originZone, originZone);
+      const arr = convertTimeBetweenZones(trip.departure_date, trip.arrival_time, originZone, destZone);
+      const duration = getTripDuration(trip.departure_date, trip.departure_time, trip.arrival_time);
+      const isNextDay = dep.date !== arr.date;
+
+      return (
+        <div key={i} style={styles.tripRow}>
+          <div style={styles.leftCard}>
+            <div style={styles.topRow}>
+              <div style={styles.trainNumber}>#{trainNumber}</div>
+              <div style={styles.arrivalDate}>
+                <div>抵達</div>
+                <div>{arr.date}</div>
+              </div>
+            </div>
+            <div style={styles.leftContent}>
+              <div style={styles.columnLeft}>
+                <div style={styles.place}>{trip.departure_stop_name}</div>
+                <div style={styles.time}>{dep.time}</div>
+              </div>
+              <div style={styles.columnCenter}>
+                <div style={{ fontSize: 24 }}>⟶</div>
+                <div style={{ fontSize: 14 }}>
+                  約 {duration.hours} 小時 {duration.minutes > 0 ? `${duration.minutes} 分` : ''}
+                </div>
+              </div>
+              <div style={styles.columnRight}>
+                <div style={styles.place}>{trip.arrival_stop_name}</div>
+                <div style={styles.time}>
+                  {arr.time}
+                  {isNextDay && <span style={{ fontSize: 12, color: '#888' }}>（+1 日）</span>}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style={styles.priceCard}>
+            <div style={styles.priceHeader}>經濟艙</div>
+            <div style={styles.priceBody}>{trip.economy_price}</div>
+          </div>
+
+          <div style={styles.priceCard}>
+            <div style={styles.priceHeader}>臥鋪</div>
+            <div style={styles.priceBody}>{trip.sleeper_price}</div>
+          </div>
+        </div>
+      );
+    });
+  }, [trips, ticketingMap]);
 
   return (
     <div style={{ fontFamily: 'sans-serif', padding: '2rem', backgroundColor: '#f5f5f5' }}>
       <h2 style={{ marginBottom: 16 }}>查詢結果</h2>
-
-      {trips.map((trip, i) => {
-        const duration = computeDuration(trip.departure_time, trip.arrival_time);
-        const ticketInfo = ticketingMap.get(trip.trip_id);
-        const trainNumber = ticketInfo?.trip_short_name || trip.trip_id;
-        const [ah] = trip.arrival_time.split(':').map(Number);
-        const arrivesNextDay = ah >= 24;
-        const arrivalDate = formatArrivalDate(trip.departure_date, trip.arrival_time);
-
-        return (
-          <div key={i} style={styles.tripRow}>
-            {/* 左卡片 */}
-            <div style={styles.leftCard}>
-              <div style={styles.topRow}>
-                <div style={styles.trainNumber}>#{trainNumber}</div>
-                {arrivesNextDay && (
-                  <div style={styles.arrivalDate}>
-                    <div>抵達</div> 
-                    <div>{arrivalDate}</div>
-                 </div>       
-                )}
-              </div>
-              <div style={styles.leftContent}>
-                {/* 出發地 + 時間 */}
-                <div style={styles.columnLeft}>
-                  <div style={styles.place}>{trip.departure_stop_name}</div>
-                  <div style={styles.time}>{formatTime24(trip.departure_time)}</div>
-                </div>
-
-                {/* 箭頭 + 行車時間 */}
-                <div style={styles.columnCenter}>
-                  <div style={{ fontSize: 24 }}>⟶</div>
-                  <div style={{ fontSize: 14 }}>{duration}</div>
-                </div>
-
-                {/* 抵達地 + 時間 */}
-                <div style={styles.columnRight}>
-                  <div style={styles.place}>{trip.arrival_stop_name}</div>
-                  <div style={styles.time}>{formatTime24(trip.arrival_time)}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* 中卡片 */}
-            <div style={styles.priceCard}>
-              <div style={styles.priceHeader}>經濟艙</div>
-              <div style={styles.priceBody}>{trip.economy_price}</div>
-            </div>
-
-            {/* 右卡片 */}
-            <div style={styles.priceCard}>
-              <div style={styles.priceHeader}>臥鋪</div>
-              <div style={styles.priceBody}>{trip.sleeper_price}</div>
-            </div>
-          </div>
-        );
-      })}
+      {tripRows}
     </div>
   );
 }
 
+// ✅ styles 保持不變
 const styles: { [key: string]: React.CSSProperties } = {
   tripRow: {
     display: 'flex',
@@ -228,6 +214,9 @@ const styles: { [key: string]: React.CSSProperties } = {
     justifyContent: 'center',
   },
 };
+
+
+
 
 
 
