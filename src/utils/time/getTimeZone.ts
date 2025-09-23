@@ -1,27 +1,25 @@
+type Stop = {
+  stop_id: string;
+  stop_name: string;
+  stop_timezone?: string;
+  // 其他欄位略
+};
+
+// ✅ 這是你從 stops.txt 轉出來的資料
+import { stopMap } from './gtfsData'; // 假設你在轉檔階段建立了 stopMap
+
 export function getTimeZone(stopId: string): string {
-  const zoneMap: { [key: string]: string } = {
-    // 西岸：British Columbia
-    '119': 'America/Vancouver', // Abbotsford
-    '341': 'America/Vancouver', // Vancouver
+  const stop = stopMap[stopId];
 
-    // 山區：Alberta
-    '618': 'America/Edmonton',
-    '601': 'America/Edmonton',
-    '78': 'America/Edmonton',
-    '93': 'America/Edmonton',
-    '323': 'America/Edmonton',
-    '282': 'America/Edmonton',
-    '162': 'America/Edmonton',
-    '600': 'America/Edmonton',
-    '436': 'America/Edmonton',
+  if (!stop) {
+    console.warn('⚠️ 找不到 stopId:', stopId);
+    return 'America/Toronto'; // fallback 保守用 Toronto
+  }
 
-    // 其他可擴充：Toronto, Montreal, Halifax, etc.
-    '344': 'America/Toronto',
-    '405': 'America/Montreal',
-    '404': 'America/Halifax',
-    '407': 'America/St_Johns',
-  };
+  if (!stop.stop_timezone) {
+    console.warn('⚠️ stop_timezone 缺失:', stopId, stop.stop_name);
+    return 'America/Toronto';
+  }
 
-  return zoneMap[stopId] || 'America/Toronto'; // fallback 成東部時間
+  return stop.stop_timezone;
 }
-
