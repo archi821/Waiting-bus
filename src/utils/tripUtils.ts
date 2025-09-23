@@ -13,21 +13,23 @@ function safeParseDate(date: string) {
   return iso.isValid ? iso : DateTime.now();
 }
 
-export function convertTimeBetweenZones(date: string, time: string, fromZone: string, toZone: string) {
+export function convertTimeBetweenZones(date: string, time: string, _fromZone: string, toZone: string) {
   try {
-    const base = safeParseDate(date);
+    const base = DateTime.fromISO(date, { zone: 'UTC-4' }); // ✅ 明確指定 base 是 UTC-4
     const { hour, minute, second } = safeParseTime(time);
-    const dt = base.set({ hour, minute, second }).setZone(fromZone);
+
+    const dt = base.plus({ hours: hour, minutes: minute, seconds: second }); // ✅ 支援 hour ≥ 24
     if (!dt.isValid) throw new Error(dt.invalidExplanation || 'Invalid DateTime');
-    const converted = dt.setZone(toZone);
+
+    const converted = dt.setZone(toZone); // ✅ 顯示成目的地時區
     return {
       time: converted.toFormat('HH:mm'),
       date: converted.toFormat('yyyy-MM-dd'),
       datetime: converted,
     };
   } catch (err) {
-    console.warn('❌ 時間轉換失敗:', { date, time, fromZone, toZone, err });
-    return { time: '--:--', date: '未知', datetime: DateTime.now() };
+    console.warn('❌ 時間轉換失敗:', { date, time, fromZone: _fromZone, toZone, err });
+    return { time: '--:--', date: '未知', datetime: DateTime.invalid('Invalid DateTime') };
   }
 }
 
@@ -37,6 +39,7 @@ export function getTripDuration(date: string, depTime: string, arrTime: string) 
     const dep = base.plus(safeParseTime(depTime));
     let arr = base.plus(safeParseTime(arrTime));
     if (arr < dep) arr = arr.plus({ days: 1 });
+
     const diff = arr.diff(dep, ['hours', 'minutes']).toObject();
     return {
       hours: Math.floor(diff.hours ?? 0),
@@ -51,6 +54,13 @@ export function getTripDuration(date: string, depTime: string, arrTime: string) 
 export function isNextDay(depDate: string, arrDate: string) {
   return depDate !== arrDate;
 }
+
+
+
+
+
+
+
 
 
 
