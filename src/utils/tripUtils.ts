@@ -15,7 +15,7 @@ function safeParseDate(date: string) {
 
 export function convertTimeBetweenZones(date: string, time: string, _fromZone: string, toZone: string) {
   try {
-    const base = DateTime.fromISO(date, { zone: 'UTC-4' }); // ✅ 明確指定 base 是 UTC-4
+    const base = DateTime.fromISO(date, { zone: 'America/Toronto' }); // ✅ 明確指定 base 是 America/Toronto
     const { hour, minute, second } = safeParseTime(time);
 
     const dt = base.plus({ hours: hour, minutes: minute, seconds: second }); // ✅ 支援 hour ≥ 24
@@ -54,6 +54,39 @@ export function getTripDuration(date: string, depTime: string, arrTime: string) 
 export function isNextDay(depDate: string, arrDate: string) {
   return depDate !== arrDate;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,52 +1,37 @@
 import fs from 'fs';
 import path from 'path';
-import { parse } from 'csv-parse/sync';
 
-// 🔧 stops.txt 的絕對路徑（不動它）
-const inputPath = path.resolve(
-  '/workspaces/Waiting-bus/public/viatrain_gtfs/stops.txt'
-);
-const raw = fs.readFileSync(inputPath, 'utf8');
+const stopsPath = path.resolve(__dirname, '../public/viatrain_gtfs/stops.txt');
+const outputPath = path.resolve(__dirname, '../src/stopMap.ts');
 
-// ✅ 定義 stops.txt 的欄位型別
-type StopRow = {
-  stop_id: string;
-  stop_name: string;
-  stop_timezone?: string;
-};
+const raw = fs.readFileSync(stopsPath, 'utf-8');
+const lines = raw.split('\n').filter((line) => line.trim() !== '');
+const headers = lines[0].split(',').map((h) => h.trim());
 
-// ✅ 解析 CSV 成物件陣列
-const records = parse(raw, {
-  columns: true,
-  skip_empty_lines: true,
-}) as StopRow[];
+const stop_id_index = headers.indexOf('stop_id');
+const timezone_index = headers.indexOf('stop_timezone');
 
-// ✅ 建立 stopMap：以 stop_id 為 key
-const stopMap: Record<string, StopRow> = {};
+if (stop_id_index === -1 || timezone_index === -1) {
+  throw new Error('❌ stops.txt 缺少 stop_id 或 stop_timezone 欄位');
+}
 
-for (const row of records) {
-  if (!row.stop_id || !row.stop_name) {
-    console.warn(`⚠️ 無效資料列，略過: ${JSON.stringify(row)}`);
-    continue;
-  }
+const stopMap: Record<string, string> = {};
 
-  stopMap[row.stop_id] = {
-    stop_id: row.stop_id,
-    stop_name: row.stop_name,
-    stop_timezone: row.stop_timezone,
-  };
+for (let i = 1; i < lines.length; i++) {
+  const cols = lines[i].split(',').map((c) => c.trim());
+  const stop_id = cols[stop_id_index];
+  const timezone = cols[timezone_index];
 
-  if (!row.stop_timezone) {
-    console.warn(`⚠️ stop_id ${row.stop_id} (${row.stop_name}) 缺少 stop_timezone`);
+  if (stop_id && timezone) {
+    stopMap[stop_id] = timezone;
   }
 }
 
-// ✅ 輸出成 TypeScript 檔案（你可以自由指定位置）
-const outputPath = path.resolve(__dirname, '../src/stopMap.ts');
-const outputContent = `export const stopMap = ${JSON.stringify(stopMap, null, 2)};\n`;
+const output = `export const stopMap: Record<string, string> = ${JSON.stringify(stopMap, null, 2)};\n`;
 
-fs.writeFileSync(outputPath, outputContent);
+fs.writeFileSync(outputPath, output, 'utf-8');
+console.log(`✅ stopMap.ts 已生成，共 ${Object.keys(stopMap).length} 筆`);
 
-console.log(`✅ stopMap.ts 已產生，共 ${Object.keys(stopMap).length} 筆站點`);
+
 
 

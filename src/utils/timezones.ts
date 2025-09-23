@@ -32,4 +32,3 @@ export function getTimeZone(stopId: string): string {
   }
 }
 
-
